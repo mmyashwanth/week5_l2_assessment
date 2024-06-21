@@ -1,0 +1,271 @@
+{{ 'shop-the-look.css' | asset_url | stylesheet_tag }}
+
+<script src="{{ 'shop-the-look.js' | asset_url }}" defer></script>
+
+{% capture splideOptions %}
+{
+    "type": "{{ section.settings.slide_type }}",
+    "perPage": 1,
+    "pagination": {{ section.settings.display_dots }},
+    "autoplay": {{ section.settings.autoplay_slide }},
+    "interval": {{ section.settings.autoplay_duration }}000,
+    "arrows": {{ section.settings.display_arrows }},
+    "breakpoints": {
+        "990": {
+            "drag": true
+        },
+        "989": {
+            "drag": false
+        }
+    }
+}
+{% endcapture %}
+
+{% style %}
+.section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+}
+
+@media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+}
+
+.bg-color--{{ section.id }} {
+    background-color: {{ section.settings.background_color }};
+}
+{% endstyle %}
+
+<div class="shop-the-look__wrapper">
+    <div class="shop-the-look__responsive_wrapper page-width bg-color--{{ section.id }} section-{{ section.id }}-padding isolate">
+        <div class="shop-the-look__header">
+            <h2>{{ section.settings.section_title }}</h2>
+        </div>
+        <div class="shop-the-look__content">
+            <div class="shop-the-look__media isolate">
+                {% render 'responsive-picture'
+                    desktopImage: section.settings.desktop_image,
+                    mobileImage: section.settings.mobile_image,
+                    img-class: 'w-full'
+                %}
+                {% for block in section.blocks %}
+                <button class="shop-the-look__media-hotspots" style="top: {{ block.settings.position_from_top }}%; left: {{ block.settings.position_from_left }}%" data-i={{ forloop.index0 }}></button>
+                {% endfor %}
+            </div>
+            <div class="shop-the-look__product-wrapper">
+                <splider-component class="splide splide-component" data-options='{{ splideOptions }}'>
+                    <div class="splide__arrows splide__arrows--ltr buttons-container">
+                        <button class="splide__arrow splide__arrow--prev previous-button" type="button" aria-label="Previous slide" aria-controls="splide01-track">
+                            <svg class="chevron--right" width="24" height="25" viewBox="0 0 24 25" fill="none">
+                                <path d="M9 18.7913L15 12.7913L9 6.79126" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <button class="splide__arrow splide__arrow--next next-button" type="button" aria-label="Next slide" aria-controls="splide01-track">
+                            <svg class="chevron--right" width="24" height="25" viewBox="0 0 24 25" fill="none">
+                                <path d="M9 18.7913L15 12.7913L9 6.79126" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="splide__track">
+                        <ul class="splide__list shop-the-look__product-card-wrapper">
+                            {% for block in section.blocks %}
+                            <li class="splide__slide shop-the-look__product-card">
+                                <div class="isolate">
+                                    <a target="_blank" href="{{ block.settings.product.url }}">
+                                        {% render 'responsive-picture'
+                                            desktopImage: block.settings.product.featured_image
+                                            img-class: 'w-full'
+                                        %}
+                                        {% for tag in block.settings.product.tags %}
+                                        {% if tag == "On sale" %}
+                                        <span class='tag'>{{ tag }}</span>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </a>
+                                </div>
+                                <div class="shop-the-look__product-info">
+                                    {% if block.settings.product.title != blank %}
+                                    <h3>{{ block.settings.product.title }}</h3>
+                                    {% endif %}
+                                    {% if block.settings.product.metafields.custom.rating != blank %}
+                                    <div class="rating">
+                                        {% for i in (1..block.settings.product.metafields.custom.rating) %}
+                                        <span>
+                                            {% render 'star.liquid' %}
+                                        </span>
+                                        {% endfor %}
+                                        {{ block.settings.product.metafields.custom.rating }}.0
+                                    </div>
+                                    {% endif %}
+                                    {% if block.settings.product.price != blank %}
+                                    <p class="{% if block.settings.product.compare_at_price %}if-compare-at-price{% endif %}">
+                                        {% if block.settings.product.compare_at_price %}
+                                        {% else %}From {% endif %} {{ block.settings.product.price | money_with_currency }}
+                                        {% if block.settings.product.compare_at_price != blank %}
+                                        <span class="line-through">{{ block.settings.product.compare_at_price | money_with_currency }}</span>
+                                        {% endif %}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </splider-component>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% schema %}
+{
+    "name": "shop the look",
+    "tag": "section",
+    "class": "section",
+    "settings": [
+        {
+            "type": "richtext",
+            "label": "Section Title",
+            "id": "section_title"
+        },
+        {
+            "type": "header",
+            "content": "Image options"
+        },
+        {
+            "type": "image_picker",
+            "label": "Desktop image",
+            "id": "desktop_image",
+            "info": "Recommended size: "
+        },
+        {
+            "type": "image_picker",
+            "label": "Mobile image",
+            "id": "mobile_image",
+            "info": "Recommended size: "
+        },
+        {
+            "type": "header",
+            "content": "Slider settings"
+        },
+        {
+            "type": "select",
+            "id": "slide_type",
+            "label": "Slider type",
+            "options": [
+                {
+                    "value": "loop",
+                    "label": "Loop"
+                },
+                {
+                    "value": "fade",
+                    "label": "Fade"
+                },
+                {
+                    "value": "slide",
+                    "label": "Slide"
+                }
+            ],
+            "default": "slide"
+        },
+        {
+            "type": "checkbox",
+            "label": "Display arrows",
+            "id": "display_arrows",
+            "default": true,
+            "info": "Arrows are hidden in mobile devices"
+        },
+        {
+            "type": "checkbox",
+            "label": "Display dots",
+            "id": "display_dots",
+            "default": false
+        },
+        {
+            "type": "checkbox",
+            "label": "Autoplay slide",
+            "id": "autoplay_slide",
+            "default": false
+        },
+        {
+            "type": "range",
+            "label": "Autoplay duration",
+            "id": "autoplay_duration",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 3
+        },
+        {
+            "type": "color",
+            "label": "Background color",
+            "id": "background_color"
+        },
+        {
+            "type": "header",
+            "content": "t:sections.all.padding.section_padding_heading"
+        },
+        {
+            "type": "range",
+            "id": "padding_top",
+            "min": 0,
+            "max": 100,
+            "step": 4,
+            "unit": "px",
+            "label": "t:sections.all.padding.padding_top",
+            "default": 36
+        },
+        {
+            "type": "range",
+            "id": "padding_bottom",
+            "min": 0,
+            "max": 100,
+            "step": 4,
+            "unit": "px",
+            "label": "t:sections.all.padding.padding_bottom",
+            "default": 36
+        }
+    ],
+    "blocks": [
+        {
+            "type": "hotspot",
+            "name": "Hotspot",
+            "settings": [
+                {
+                    "type": "range",
+                    "label": "Position from top",
+                    "id": "position_from_top",
+                    "min": 0,
+                    "max": 100,
+                    "step": 1,
+                    "unit": "%",
+                    "default": 1
+                },
+                {
+                    "type": "range",
+                    "label": "Position from left",
+                    "id": "position_from_left",
+                    "min": 0,
+                    "max": 100,
+                    "step": 1,
+                    "unit": "%",
+                    "default": 1
+                },
+                {
+                    "type": "product",
+                    "label": "Product",
+                    "id": "product"
+                }
+            ]
+        }
+    ],
+    "presets": [
+        {
+            "name": "Shop the look"
+        }
+    ]
+}
+{% endschema %}
